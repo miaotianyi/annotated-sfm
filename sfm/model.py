@@ -38,6 +38,17 @@ class SFM:
         """
         return tuple(node for node, in_degree in self.graph.in_degree() if in_degree > 0)
 
+    @cached_property
+    def topological_order(self):
+        """
+        Get the topological order of nodes.
+
+        For any directed edge (u, v), node u must come before node v.
+
+        This property is cached to save computations.
+        """
+        return tuple(nx.topological_sort(self.graph))
+
     def satisfied_by(self, w_total: dict) -> bool:
         """
         Check whether a total valuation will satisfy this SFM.
