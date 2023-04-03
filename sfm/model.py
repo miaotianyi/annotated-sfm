@@ -49,6 +49,10 @@ class SFM:
         """
         return tuple(nx.topological_sort(self.graph))
 
+    @cached_property
+    def is_directed_acyclic_graph(self):
+        return nx.is_directed_acyclic_graph(self.graph)
+
     def satisfied_by(self, w_total: dict) -> bool:
         """
         Check whether a total valuation will satisfy this SFM.
