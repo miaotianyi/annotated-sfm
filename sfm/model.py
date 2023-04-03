@@ -29,14 +29,14 @@ class SFM:
         """
         Get a tuple of all exogenous nodes
         """
-        return tuple(node for node, in_degree in self.graph.in_degree() if in_degree == 0)
+        return frozenset(node for node, in_degree in self.graph.in_degree() if in_degree == 0)
 
     @cached_property
     def endo_nodes(self):
         """
         Get a tuple of all endogenous nodes
         """
-        return tuple(node for node, in_degree in self.graph.in_degree() if in_degree > 0)
+        return frozenset(node for node, in_degree in self.graph.in_degree() if in_degree > 0)
 
     @cached_property
     def topological_order(self):
