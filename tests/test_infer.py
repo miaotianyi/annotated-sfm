@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
-from sfm.inference import contrast_encode, contrast_decode
+from sfm.generate import RandomSFM, RandomLinear, RandomCongruence, plot_dag
+from sfm.inference import contrast_encode, contrast_decode, forward_infer
 
 
 class MyTestCase(unittest.TestCase):
@@ -21,6 +22,14 @@ class MyTestCase(unittest.TestCase):
             # contrastive encoding and decoding should be reverse operations
             self.assertEqual(contrast_decode(contrast_encode(d2, w_ref=d1), w_ref=d1), d2)
             self.assertEqual(contrast_decode(contrast_encode(d1, w_ref=d2), w_ref=d2), d1)
+
+    def test_vanilla_full(self):
+        n_cases = 10
+        for test_case in range(n_cases):
+            sfm = RandomSFM(20, 0.5, RandomLinear)
+            w_exo = {u: np.random.randn() for u in sfm.exo_nodes}
+            w_total = forward_infer(sfm, w_exo)
+            self.assertTrue(sfm.satisfied_by(w_total))
 
 
 if __name__ == '__main__':

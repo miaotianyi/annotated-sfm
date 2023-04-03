@@ -9,7 +9,20 @@ from matplotlib import colors as mcolors
 from functools import partial
 
 
-from model import SFM
+from sfm.model import SFM
+
+
+class RandomLinear:
+    def __init__(self, nodes):
+        self.nodes = tuple(nodes)
+        n = len(self.nodes)
+        self.a = np.random.randn(n)  # weights for first-order terms
+        self.b = np.random.randn()  # constant bias
+
+    def __call__(self, w: dict) -> float:
+        # convert parent valuation into a vector
+        x = np.array([w[node] for node in self.nodes])
+        return self.a @ x + self.b
 
 
 class RandomQuadratic:
@@ -26,6 +39,10 @@ class RandomQuadratic:
         This is useful for generating random SFMs with
         random graph connections and random functions,
         so the correctness of inference algorithms can be easily tested.
+
+        Warning: the quadratic nature of this function could result in
+        divergence (infinity/nan) when such functions are repeatedly applied.
+        Use linear models instead.
 
         Parameters
         ----------
@@ -136,7 +153,7 @@ def random_dag(n, p):
 
 
 class RandomSFM(SFM):
-    def __init__(self, n, p, function_class=RandomQuadratic):
+    def __init__(self, n, p, function_class=RandomLinear):
         graph = random_dag(n, p)
         super().__init__(graph=graph, domains={}, functions={})
         for node in self.endo_nodes:

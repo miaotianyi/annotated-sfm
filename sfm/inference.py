@@ -1,6 +1,8 @@
 import numpy as np
 import networkx as nx
 
+from sfm.model import SFM
+
 
 def contrast_encode(w: dict, w_ref: dict):
     """
@@ -44,6 +46,27 @@ def contrast_decode(w: dict, w_ref: dict):
         else:
             w_total[node] = w_ref[node]
     return w_total
+
+
+def forward_infer(sfm: SFM, w_exo, w_ref=None):
+    assert all(u in w_exo for u in sfm.exo_nodes),\
+        "All exogenous nodes must be present in the valuation"
+    assert nx.is_directed_acyclic_graph(sfm.graph),\
+        "Forward inference is only allowed in directed acyclic graphs"
+    if w_ref is None:  # use vanilla forward inference
+        w = w_exo.copy()    # shallow copy to initialize output valuation w
+        for node in sfm.topological_order:
+            if node not in w:
+                # this method comes from the definition of forward inference
+                w_parent = {parent: w[parent] for parent in sfm.graph.predecessors(node)}
+                w[node] = sfm.functions[node](w_parent)
+                # this second method is slightly faster because it doesn't involve
+                # creating a parent valuation dictionary every time.
+                # assuming the structural function doesn't check the length of w dict.
+                # w[node] = sfm.functions[node](w)
+        return w
+    else:
+        raise NotImplementedError("Implement contrastive forward inference")
 
 
 def main():
