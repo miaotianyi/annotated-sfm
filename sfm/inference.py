@@ -57,7 +57,7 @@ def vanilla_forward_infer(sfm: SFM, w_exo):
     for node in sfm.topological_order:
         if node not in w:
             # this method comes from the definition of forward inference
-            w_parent = {parent: w[parent] for parent in sfm.graph.predecessors(node)}
+            w_parent = {parent: w[parent] for parent in sfm.parents(node)}
             w[node] = sfm.functions[node](w_parent)
             # this second method is slightly faster because it doesn't involve
             # creating a parent valuation dictionary every time.
@@ -86,14 +86,14 @@ def contrastive_forward_infer(sfm: SFM, w_exo: dict, w_ref: dict):
     for u in sfm.topological_order:
         recompute = changed[u]
         # recompute node u if u or any of its parents have changed
-        for parent in sfm.graph.predecessors(u):
+        for parent in sfm.parents(u):
             recompute = recompute or changed[parent]
         if recompute:
             if u in sfm.exo_nodes:
                 w[u] = w_exo[u]
             else:   # u is endogenous
                 f = sfm.functions[u]
-                # w_parent = {parent: w[parent] for parent in sfm.graph.predecessors(u)}
+                # w_parent = {parent: w[parent] for parent in sfm.parents(u)}
                 # new_val = f(w_parent)
                 new_val = f(w)
                 COUNT += 1

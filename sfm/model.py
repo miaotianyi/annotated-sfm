@@ -1,5 +1,5 @@
 import networkx as nx
-from functools import cached_property
+from functools import cached_property, cache
 
 
 class SFM:
@@ -52,6 +52,10 @@ class SFM:
     @cached_property
     def is_directed_acyclic_graph(self):
         return nx.is_directed_acyclic_graph(self.graph)
+
+    @cache
+    def parents(self, node):
+        return frozenset(self.graph.predecessors(node))
 
     def satisfied_by(self, w_total: dict) -> bool:
         """
