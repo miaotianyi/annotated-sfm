@@ -13,6 +13,11 @@ from sfm.model import SFM
 
 
 class RandomLinear:
+    """
+    Generate a random linear function
+    with weights and bias initialized from unit normal N(0, 1).
+    The input is a {node: value} dictionary.
+    """
     def __init__(self, nodes):
         self.nodes = tuple(nodes)
         n = len(self.nodes)
@@ -77,7 +82,7 @@ class RandomQuadratic:
 class RandomCongruence:
     def __init__(self, nodes, m):
         """
-        A linear congruence function that takes in a dictionary of node-integer mappings,
+        A linear congruence function that takes in a {node: int value} dictionary
         and returns an integer.
         The formula is of the form:
         `f(x1, x2, ..., xn) = a1 x1 + a2 x2 + ... + an xn + c (mod m)`
