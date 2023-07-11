@@ -25,7 +25,7 @@ class RandomLinear:
         self.b = np.random.randn()  # constant bias
 
     def __call__(self, w: dict) -> float:
-        # convert parent valuation into a vector
+        # convert parent assignment into a vector
         x = np.array([w[node] for node in self.nodes])
         return self.a @ x + self.b
 
@@ -62,19 +62,19 @@ class RandomQuadratic:
 
     def __call__(self, w: dict) -> float:
         """
-        Compute the quadratic function based on parent valuation.
+        Compute the quadratic function based on parent assignment.
 
         Parameters
         ----------
         w: dict
-            The parent valuation
+            The parent assignment
 
         Returns
         -------
         float
             The computed result as a floating point number.
         """
-        # convert parent valuation into a vector
+        # convert parent assignment into a vector
         x = np.array([w[node] for node in self.nodes])
         return x.T @ self.A @ x + self.b @ x + self.c
 
