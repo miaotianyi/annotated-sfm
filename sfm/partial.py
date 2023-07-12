@@ -57,3 +57,10 @@ def partial_vfi(sfm: SFM, w_exo: dict, target_nodes: set):
     print(f"partial vfi evaluations: {COUNT}/{len(sfm.endo_nodes)}")
     return {u: w[u] for u in target_nodes}
 
+
+def partial_cfi(sfm: SFM, w0: dict, w1_c_exo: dict, target_nodes: set):
+    # dummy implementation: just use partial vfi
+    from sfm.inference import delta_decode
+    w1_exo = delta_decode(w1_change=w1_c_exo, w0={u: w0[u] for u in sfm.exo_nodes})
+    return partial_vfi(sfm, w_exo=w1_exo, target_nodes=target_nodes)
+

@@ -78,14 +78,14 @@ def vfi(sfm: SFM, w_exo):
     return w
 
 
-def cfi(sfm: SFM, w1_change_exo: dict, w0: dict):
+def cfi(sfm: SFM, w0: dict, w1_changed_exo: dict):
     """
     Contrastive forward inference.
 
     Parameters
     ----------
     sfm
-    w1_change_exo
+    w1_changed_exo
     w0
 
     Returns
@@ -94,13 +94,13 @@ def cfi(sfm: SFM, w1_change_exo: dict, w0: dict):
     """
     assert sfm.is_directed_acyclic_graph, \
         "Forward inference is only allowed in directed acyclic graphs"
-    assert all(u in sfm.exo_nodes for u in w1_change_exo), \
+    assert all(u in sfm.exo_nodes for u in w1_changed_exo), \
         "All nodes in w_exo must be exogenous in the SFM"
     assert all(u in w0 for u in sfm.graph.nodes), \
         "w_ref must contain assignment over all nodes"
     changed = {}  # node -> whether the value changes
     for u in sfm.graph.nodes:
-        if u in w1_change_exo and w1_change_exo[u] != w0[u]:
+        if u in w1_changed_exo and w1_changed_exo[u] != w0[u]:
             changed[u] = True
         else:
             changed[u] = False
@@ -115,7 +115,7 @@ def cfi(sfm: SFM, w1_change_exo: dict, w0: dict):
             recompute = recompute or changed[parent]
         if recompute:
             if sfm.is_exo_node(u):
-                w1[u] = w1_change_exo[u]
+                w1[u] = w1_changed_exo[u]
             else:   # u is endogenous
                 f = sfm.functions[u]
                 # w1_parent = {parent: w1[parent] for parent in sfm.parents(u)}
