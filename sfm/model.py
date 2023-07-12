@@ -38,6 +38,16 @@ class SFM:
         """
         return frozenset(node for node, in_degree in self.graph.in_degree() if in_degree > 0)
 
+    @cache
+    def is_exo_node(self, node):
+        if not self.graph.has_node(node):
+            raise ValueError(f"Node {node} doesn't exist")
+        return self.graph.in_degree(node) == 0
+
+    @cache
+    def is_endo_node(self, node):
+        return not self.is_exo_node(node)
+
     @cached_property
     def topological_order(self):
         """
@@ -59,14 +69,14 @@ class SFM:
 
     def satisfied_by(self, w_total: dict) -> bool:
         """
-        Check whether a total valuation will satisfy this SFM.
+        Check whether a complete assignment will satisfy this SFM.
 
-        A total valuation assigns a value to each node in the graph.
+        A complete assignment assigns a value to each node in the graph.
 
         Parameters
         ----------
         w_total: dict
-            The total valuation to be checked.
+            The complete assignment to be checked.
 
         Returns
         -------
@@ -82,16 +92,16 @@ class SFM:
 
         for node, value in w_total.items():
             if self.graph.in_degree(node) > 0:  # the node has at least 1 parent node
-                # valuation over the parents of the node
+                # assignment over the parents of the node
                 w_parent = {p: w_total[p] for p in self.graph.predecessors(node)}
                 if value != self.functions[node](w_parent):
-                    # this structural function is not satisfied by the valuation
+                    # this structural function is not satisfied by the assignment
                     return False
         return True
 
     def all_violations(self, w_total):
         """
-        Get all nodes whose valuation violates
+        Get all nodes whose assignment violates
 
         This provides more information than `SFM.satisfied_by`,
         making it useful for debugging.
@@ -99,23 +109,23 @@ class SFM:
         Parameters
         ----------
         w_total: dict
-            The total valuation to evaluate
+            The complete assignment to evaluate
 
         Returns
         -------
         A list of (node, expected, actual) tuples,
-        where the expected value is computed based on parent valuation
+        where the expected value is computed based on parent assignment
         and structural function.
 
         """
         violations = []
         for node, actual in w_total.items():
             if self.graph.in_degree(node) > 0:  # the node has at least 1 parent node
-                # valuation over the parents of the node
+                # assignment over the parents of the node
                 w_parent = {p: w_total[p] for p in self.graph.predecessors(node)}
                 expected = self.functions[node](w_parent)
                 if expected != actual:
-                    # this structural function is not satisfied by the valuation
+                    # this structural function is not satisfied by the assignment
                     violations.append((node, expected, actual))
         return violations
 
