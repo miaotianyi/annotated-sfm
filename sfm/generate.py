@@ -117,6 +117,7 @@ def undirected_to_dag(G: nx.Graph, order=None):
     Otherwise, the order will be a random permutation of nodes.
     """
     G2 = nx.DiGraph()
+    G2.add_nodes_from(G.nodes)
     if order is None:
         order = np.random.permutation(G.nodes)
     order_dict = {x: i for i, x in enumerate(order)}
