@@ -4,82 +4,107 @@ import networkx as nx
 from sfm.model import SFM
 
 
-def contrast_encode(w: dict, w_ref: dict):
+def delta_encode(w1: dict, w0: dict):
     """
+    Return the node-value pairs in w1 that differ from w0.
 
     Parameters
     ----------
-    w: dict
+    w1: dict
 
-    w_ref: dict
+    w0: dict
 
     Returns
     -------
 
     """
-    w_partial = {}
-    for node, new_value in w.items():
-        if node not in w_ref:
-            raise ValueError(f"Node {node} doesn't exist in reference valuation")
-        if new_value != w_ref[node]:
-            w_partial[node] = new_value
-    return w_partial
+    w1_change = {}
+    for node, new_value in w1.items():
+        if node not in w0 or new_value != w0[node]:
+            w1_change[node] = new_value
+    return w1_change
 
 
-def contrast_decode(w: dict, w_ref: dict):
+def delta_decode(w1_change: dict, w0: dict):
     """
 
     Parameters
     ----------
-    w: dict
+    w1_change: dict
 
-    w_ref: dict
+    w0: dict
 
     Returns
     -------
 
     """
-    w_total = {}
-    for node in w_ref:
-        if node in w:
-            w_total[node] = w[node]
-        else:
-            w_total[node] = w_ref[node]
-    return w_total
+    w1 = w0.copy()
+    for node in w1_change:
+        w1[node] = w1_change[node]
+    return w1
 
 
-def vanilla_forward_infer(sfm: SFM, w_exo):
+def vfi(sfm: SFM, w_exo):
+    """
+    Vanilla forward inference
+
+    Parameters
+    ----------
+    sfm : SFM
+        The structural functional model
+
+    w_exo : dict
+        The assignment over all exo-nodes.
+
+    Returns
+    -------
+    w : dict
+        The induced complete assignment
+    """
     assert sfm.is_directed_acyclic_graph, \
         "Forward inference is only allowed in directed acyclic graphs"
     assert frozenset(w_exo.keys()) == sfm.exo_nodes,\
-        "w_exo must contain exactly all exogenous nodes for total forward inference"
-    w = w_exo.copy()    # shallow copy to initialize output valuation w
+        "w_exo must contain all exogenous nodes for non-contrastive forward inference"
+    w = w_exo.copy()    # shallow copy to initialize output assignment w
     for node in sfm.topological_order:
         if node not in w:
             # this method comes from the definition of forward inference
-            w_parent = {parent: w[parent] for parent in sfm.parents(node)}
-            w[node] = sfm.functions[node](w_parent)
+            # w_parent = {parent: w[parent] for parent in sfm.parents(node)}
+            # w[node] = sfm.functions[node](w_parent)
             # this second method is slightly faster because it doesn't involve
-            # creating a parent valuation dictionary every time.
+            # creating a parent assignment dictionary every time.
             # assuming the structural function doesn't check the length of w dict.
-            # w[node] = sfm.functions[node](w)
-    return w    # induced total valuation
+            w[node] = sfm.functions[node](w)
+    return w
 
 
-def contrastive_forward_infer(sfm: SFM, w_exo: dict, w_ref: dict):
+def cfi(sfm: SFM, w1_change_exo: dict, w0: dict):
+    """
+    Contrastive forward inference.
+
+    Parameters
+    ----------
+    sfm
+    w1_change_exo
+    w0
+
+    Returns
+    -------
+
+    """
     assert sfm.is_directed_acyclic_graph, \
         "Forward inference is only allowed in directed acyclic graphs"
-    assert all(u in sfm.exo_nodes for u in w_exo), \
+    assert all(u in sfm.exo_nodes for u in w1_change_exo), \
         "All nodes in w_exo must be exogenous in the SFM"
-    assert all(u in w_ref for u in sfm.graph.nodes), \
-        "w_ref must contain valuation over all nodes"
+    assert all(u in w0 for u in sfm.graph.nodes), \
+        "w_ref must contain assignment over all nodes"
     changed = {}  # node -> whether the value changes
     for u in sfm.graph.nodes:
-        if u in w_exo and w_exo[u] != w_ref[u]:
+        if u in w1_change_exo and w1_change_exo[u] != w0[u]:
             changed[u] = True
         else:
             changed[u] = False
-    w = {}
+    w1 = {}
 
     COUNT = 0   # debug: count the number of function evaluations
 
@@ -89,30 +114,30 @@ def contrastive_forward_infer(sfm: SFM, w_exo: dict, w_ref: dict):
         for parent in sfm.parents(u):
             recompute = recompute or changed[parent]
         if recompute:
-            if u in sfm.exo_nodes:
-                w[u] = w_exo[u]
+            if sfm.is_exo_node(u):
+                w1[u] = w1_change_exo[u]
             else:   # u is endogenous
                 f = sfm.functions[u]
-                # w_parent = {parent: w[parent] for parent in sfm.parents(u)}
-                # new_val = f(w_parent)
-                new_val = f(w)
+                # w1_parent = {parent: w1[parent] for parent in sfm.parents(u)}
+                # new_val = f(w1_parent)
+                new_val = f(w1)
                 COUNT += 1
-                if new_val != w_ref[u]:
-                    w[u] = new_val
+                if new_val != w0[u]:
+                    w1[u] = new_val
                     changed[u] = True
                 else:
-                    w[u] = w_ref[u]
+                    w1[u] = w0[u]
         else:   # don't recompute
-            w[u] = w_ref[u]
+            w1[u] = w0[u]
     print(f"Contrastive evaluations: {COUNT}/{len(sfm.endo_nodes)}")
-    return w
+    return w1
 
 
 def main():
     a, b, c = np.random.rand(3, 10)
     d1 = {x: y for x, y in zip(a, b)}
     d2 = {x: y for x, y in zip(d1, c)}
-    print(contrast_decode(contrast_encode(d1, w_ref=d2), w_ref=d2) == d1)
+    print(delta_decode(delta_encode(d1, w0=d2), w0=d2) == d1)
 
 
 if __name__ == '__main__':
