@@ -37,6 +37,8 @@ def partial_vfi(sfm: SFM, w_exo: dict, target_nodes: set):
     # perform iterative DFS because DFS reaches root/exo nodes faster
     stack = list(target_nodes)
 
+    COUNT = 0
+
     while stack:
         node = stack.pop()  # pop a node from the stack
 
@@ -48,9 +50,10 @@ def partial_vfi(sfm: SFM, w_exo: dict, target_nodes: set):
                     stack.append(node)  # push node back onto the stack
                     stack.extend(unknown_parents)   # push unknown parents to the stack
                 else:
+                    COUNT += 1
                     # all parent values are computed
                     w[node] = sfm.functions[node](w)
 
-    print("partial vfi")
+    print(f"partial vfi evaluations: {COUNT}/{len(sfm.endo_nodes)}")
     return {u: w[u] for u in target_nodes}
 

@@ -129,7 +129,7 @@ def cfi(sfm: SFM, w1_change_exo: dict, w0: dict):
                     w1[u] = w0[u]
         else:   # don't recompute
             w1[u] = w0[u]
-    print(f"Contrastive evaluations: {COUNT}/{len(sfm.endo_nodes)}")
+    print(f"CFI evaluations: {COUNT}/{len(sfm.endo_nodes)}")
     return w1
 
 
