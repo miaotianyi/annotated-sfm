@@ -40,13 +40,15 @@ class SFM:
 
     @cache
     def is_exo_node(self, node):
-        if not self.graph.has_node(node):
-            raise ValueError(f"Node {node} doesn't exist")
-        return self.graph.in_degree(node) == 0
+        # the node exists in M and is exogenous
+        # a non-existent node returns False
+        return self.graph.has_node(node) and self.graph.in_degree(node) == 0
 
     @cache
     def is_endo_node(self, node):
-        return not self.is_exo_node(node)
+        # the node exists in M and is endogenous
+        # a non-existent node returns False
+        return self.graph.has_node(node) and self.graph.in_degree(node) > 0
 
     @cached_property
     def topological_order(self):
