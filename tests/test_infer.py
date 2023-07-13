@@ -138,7 +138,7 @@ class MyTestCase(unittest.TestCase):
             w1t_partial_vfi = partial_vfi(sfm, w_exo=w1_exo, target_nodes=targets)
             self.assertEqual(w1t_vfi, w1t_partial_vfi)
             # result from partial cfi
-            w1t_partial_cfi = partial_cfi(sfm, w0=w0, w1_c_exo=w1_changed_exo, target_nodes=targets)
+            w1t_partial_cfi = partial_cfi(sfm, w0=w0, w1_changed_exo=w1_changed_exo, target_nodes=targets)
             self.assertEqual(w1t_vfi, w1t_partial_cfi)
 
 

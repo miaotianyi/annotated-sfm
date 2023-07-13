@@ -58,9 +58,56 @@ def partial_vfi(sfm: SFM, w_exo: dict, target_nodes: set):
     return {u: w[u] for u in target_nodes}
 
 
-def partial_cfi(sfm: SFM, w0: dict, w1_c_exo: dict, target_nodes: set):
-    # dummy implementation: just use partial vfi
-    from sfm.inference import delta_decode
-    w1_exo = delta_decode(w1_change=w1_c_exo, w0={u: w0[u] for u in sfm.exo_nodes})
-    return partial_vfi(sfm, w_exo=w1_exo, target_nodes=target_nodes)
+def partial_cfi(sfm: SFM, w0: dict, w1_changed_exo: dict, target_nodes: set):
+    target_nodes = set(target_nodes)
+    assert sfm.is_directed_acyclic_graph, \
+        "Forward inference is only allowed in directed acyclic graphs"
+    if any(not sfm.is_exo_node(u) for u in w1_changed_exo):
+        raise ValueError("w1_changed_exo must only contain exo-nodes in the SFM")
+    if any(not sfm.graph.has_node(u) for u in target_nodes):
+        raise ValueError("all target nodes should be in the SFM")
+
+    # changed[u]==True means changed (confirmed)
+    # changed[u]==False means not changed
+    # u not in changed means we don't know
+    changed = {u: w1_changed_exo[u] != w0[u] for u in w1_changed_exo}
+    w1_c = {u: w1_changed_exo[u] for u in w1_changed_exo if changed[u]}
+
+    stack = list(target_nodes)
+
+    COUNT = 0
+
+    while stack:
+        node = stack.pop()  # Pop a node from the stack
+        if node not in changed:     # don't know
+            if sfm.is_exo_node(node):
+                # all changed exo-nodes have been initialized in the beginning
+                changed[node] = False
+            else:
+                unknown_parents = [p for p in sfm.parents(node) if p not in changed]
+                if unknown_parents:
+                    stack.append(node)
+                    stack.extend(unknown_parents)
+                else:
+                    w_parents = {}
+                    any_parent_changed = False
+                    for p in sfm.parents(node):
+                        if changed[p]:
+                            any_parent_changed = True
+                            w_parents[p] = w1_c[p]
+                        else:
+                            w_parents[p] = w0[p]
+                    if any_parent_changed:
+                        COUNT += 1
+                        value = sfm.functions[node](w_parents)
+                        if value != w0[node]:
+                            changed[node] = True
+                            w1_c[node] = value
+                        else:
+                            changed[node] = False
+                    else:
+                        # same parents, same child
+                        changed[node] = False
+    print(f"partial cfi evaluations: {COUNT}/{len(sfm.endo_nodes)}")
+    return {u: w1_c[u] if changed[u] else w0[u] for u in target_nodes}
 
