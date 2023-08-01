@@ -3,7 +3,7 @@ Structural Functional Models (SFM) for defining causality.
 
 _Causality is just functions: "x causes y" roughly means y=f(x, ...)._
 
-Paper: Reducing Causality to Functions with Structural Models (https://arxiv.org/abs/2307.07524)
+Paper: **Reducing Causality to Functions with Structural Models** (https://arxiv.org/abs/2307.07524)
 
 This is a simple toy algorithm that illustrates the philosophical concept
 of "defining causality as functions."
